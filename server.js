@@ -4,6 +4,7 @@ const express = require('express');
 const connectDB = require('./src/config/db');
 const User = require('./src/models/user'); 
 const authRoutes = require('./src/routes/authRoutes');
+const noteRoutes = require('./src/routes/noteRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,7 +13,8 @@ app.use(express.json());
 
 connectDB();
 
-app.use('/api', authRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/notes', noteRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'Auth & Notes API' });
