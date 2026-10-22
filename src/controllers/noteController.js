@@ -21,9 +21,31 @@ const createNote = async(req,res) => {
 
 const getMyNotes = async(req,res) => {
   try{
-    const notes = await Note.find({user:req.user._id}).sort({createdAt:-1});
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit, 10) || 5));
+    const skip = (page-1)*limit;
+
+    const filter = {user:req.user._id};
+
+    const [notesCount, notes] = await Promise.all([
+      Note.countDocuments(filter),
+      Note.find(filter)
+      .sort({createdAt: -1})
+      .skip(skip)
+      .limit(limit)
+    ]);
+
+    const totalPages = Math.ceil(notesCount/limit);
+
     return res.status(200).json({
-      count: notes.length,
+      pagination:{
+        totalNotes:notesCount,
+        totalPages,
+        currentPage:page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      },
       notes
     })
   }
