@@ -27,6 +27,18 @@ const getMyNotes = async(req,res) => {
 
     const filter = {user:req.user._id};
 
+    if(req.query.search && req.query.search.trim() !== ''){
+      const searchKeyword = req.query.search.trim();
+      const sanitizedKeyword = searchKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      const searchRegex = { $regex:sanitizedKeyword, $options:'i'};
+
+      filter.$or = [
+        {title:searchRegex},
+        {content:searchRegex}
+      ]
+    }
+
     const [notesCount, notes] = await Promise.all([
       Note.countDocuments(filter),
       Note.find(filter)
@@ -44,7 +56,8 @@ const getMyNotes = async(req,res) => {
         currentPage:page,
         limit,
         hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
+        hasPrevPage: page > 1,
+        searchQuery: req.query.search? req.query.search.trim() : null
       },
       notes
     })
